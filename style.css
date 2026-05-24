@@ -1,0 +1,905 @@
+/* ==========================================================================
+   두근두근타운 악보 도우미 - High Performance Dashboard Theme
+   ========================================================================== */
+
+/* Typography & Core Variables */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+:root {
+  /* Color Palette - Vibrant Dark Theme */
+  --bg-main: #06050a;
+  --bg-card: #121019; /* Solid high-performance dark backing (eliminates blur redraw delays) */
+  --bg-card-hover: #1b1826;
+  --border-glass: rgba(255, 255, 255, 0.05);
+  --border-glass-active: rgba(255, 255, 255, 0.12);
+  
+  --text-primary: #fffffe;
+  --text-secondary: #94a3b8;
+  --text-muted: #4b5563;
+  
+  /* Octave Theme Colors */
+  --color-oct1: #38bdf8; /* Blue - Low */
+  --color-oct2: #34d399; /* Green - Medium */
+  --color-oct3: #fb923c; /* Orange - High */
+  --color-oct4: #c084fc; /* Violet - Max */
+  --color-accent: #eab308; /* Yellow/Gold for Active Pressed State */
+  
+  --shadow-glow-oct1: 0 0 10px rgba(56, 189, 248, 0.3);
+  --shadow-glow-oct2: 0 0 10px rgba(52, 211, 153, 0.3);
+  --shadow-glow-oct3: 0 0 10px rgba(251, 146, 60, 0.3);
+  --shadow-glow-oct4: 0 0 10px rgba(192, 132, 252, 0.3);
+  --shadow-glow-accent: 0 0 12px rgba(234, 179, 8, 0.55);
+  
+  --transition-smooth: all 0.06s ease-out; /* Blazing fast hover/click triggers */
+  --font-display: 'Outfit', 'Noto Sans KR', sans-serif;
+}
+
+/* Reset & Base Setup */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+body {
+  background-color: var(--bg-main);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.07) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(192, 132, 252, 0.07) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(52, 211, 153, 0.03) 0px, transparent 50%);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  min-height: 100vh;
+  overflow: hidden; /* Prevent body scroll, scrollbars inside containers */
+  line-height: 1.4;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  transition: var(--transition-smooth);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Layout System: Sidebar and Main panels */
+.app-wrapper {
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+/* Topbar Styles */
+.app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  flex-shrink: 0;
+}
+
+.topbar-left, .topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.topbar-center {
+  flex: 1;
+  text-align: center;
+  margin: 0 1rem;
+}
+
+.topbar-center .song-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-container {
+  width: 100%;
+}
+
+.app-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Responsive grid for desktop split screens */
+@media (min-width: 1024px) {
+  .app-layout {
+    grid-template-columns: 320px 1fr;
+    transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .app-layout.sidebar-hidden {
+    grid-template-columns: 0px 1fr;
+  }
+  
+  .sidebar-layout {
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    height: 100%;
+    padding-right: 0.25rem;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+  }
+
+  .app-layout.sidebar-hidden .sidebar-layout {
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  .main-layout {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    height: 100%;
+    padding-right: 0.25rem;
+  }
+}
+
+/* Solid Premium Cards (No heavy backdrop-filter blurs) */
+.glass-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  transition: var(--transition-smooth);
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================================================
+   SIDEBAR COMPONENTS
+   ========================================================================== */
+
+/* 1. Sidebar Header */
+.sidebar-header-card {
+  padding: 0.85rem;
+}
+
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.piano-emoji {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 0 8px rgba(251, 146, 60, 0.4));
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+h1 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fffffe 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+.sidebar-meta-badges {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+}
+
+.badge.bpm {
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.15);
+  color: var(--color-oct2);
+}
+
+/* 2. File Upload Box */
+.sidebar-upload-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.file-upload-box {
+  position: relative;
+  border: 1.5px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  background: rgba(255, 255, 255, 0.005);
+}
+
+.file-upload-box:hover {
+  border-color: var(--color-oct1);
+  background: rgba(56, 189, 248, 0.02);
+}
+
+.file-upload-box input[type="file"] {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.upload-icon {
+  font-size: 1.1rem;
+}
+
+.song-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.4rem 0.5rem;
+  background: rgba(255, 255, 255, 0.015);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.song-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.config-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+select {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-glass);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+select:focus {
+  border-color: var(--color-oct1);
+}
+
+/* 3. Playback Controls Card */
+.sidebar-controls-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.playback-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.playback-buttons .btn.danger {
+  grid-column: span 2;
+}
+
+.btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  transition: var(--transition-smooth);
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-glass-active);
+}
+
+.btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, var(--color-oct2) 0%, #10b981 100%);
+  border: none;
+  box-shadow: 0 2px 10px rgba(52, 211, 153, 0.15);
+}
+
+.btn.primary:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.btn.danger {
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  border: none;
+}
+
+.btn.danger:hover {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+}
+
+.speed-slider-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem 0.5rem;
+  background: rgba(255, 255, 255, 0.015);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.speed-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.speed-row input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.speed-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-oct3);
+  box-shadow: 0 0 6px rgba(251, 146, 60, 0.5);
+}
+
+.speed-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-oct3);
+  min-width: 38px;
+  text-align: right;
+}
+
+/* Progress bar inside sidebar */
+.progress-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+}
+
+.progress-fill {
+  position: absolute;
+  top: 0; left: 0; height: 100%;
+  background: linear-gradient(90deg, var(--color-oct2) 0%, var(--color-oct1) 100%);
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.05s linear;
+}
+
+.progress-handle {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  border: 1.5px solid var(--color-oct1);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
+  pointer-events: none;
+}
+
+.time-counter {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+/* Warnings */
+.warning-notification {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  margin-top: 0.25rem;
+}
+
+.warning-icon {
+  font-size: 0.95rem;
+}
+
+.warning-message {
+  font-size: 0.75rem;
+  color: #fef08a;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+
+/* ==========================================================================
+   MAIN AREA COMPONENTS (SHEET & DUAL KEYBOARDS)
+   ========================================================================== */
+
+.keyboard-section-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-primary);
+  border-left: 3px solid var(--color-oct3);
+  padding-left: 0.5rem;
+}
+
+.keyboard-section-title.qwerty-title {
+  border-color: var(--color-oct1);
+}
+
+/* 1. Sheet tab viewer */
+.sheet-viewer-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-scroll-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.4rem 0.1rem 0.8rem 0.1rem;
+  scroll-behavior: smooth;
+  min-height: 135px;
+}
+
+.sheet-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 90px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  border: 1px dashed rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.sheet-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.45rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  min-width: 65px;
+  cursor: pointer;
+  align-items: center;
+  transition: var(--transition-smooth);
+}
+
+.sheet-column:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.sheet-column.active {
+  background: rgba(234, 179, 8, 0.04);
+  border-color: rgba(234, 179, 8, 0.3);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sheet-column-header {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.sheet-column.active .sheet-column-header {
+  color: var(--color-accent);
+}
+
+.sheet-note-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px;
+  padding: 0.3rem;
+  align-items: center;
+  position: relative;
+  transition: var(--transition-smooth);
+  font-weight: 700;
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+}
+
+.sheet-note-card.sharp {
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #334155;
+}
+
+.sheet-note-card.octave-1 { border-left: 3px solid var(--color-oct1); }
+.sheet-note-card.octave-2 { border-left: 3px solid var(--color-oct2); }
+.sheet-note-card.octave-3 { border-left: 3px solid var(--color-oct3); }
+.sheet-note-card.octave-4 { border-left: 3px solid var(--color-oct4); }
+
+.sheet-note-card:hover {
+  transform: scale(1.03);
+}
+
+.sheet-column.active .sheet-note-card.octave-1 { box-shadow: var(--shadow-glow-oct1); }
+.sheet-column.active .sheet-note-card.octave-2 { box-shadow: var(--shadow-glow-oct2); }
+.sheet-column.active .sheet-note-card.octave-3 { box-shadow: var(--shadow-glow-oct3); }
+.sheet-column.active .sheet-note-card.octave-4 { box-shadow: var(--shadow-glow-oct4); }
+
+.sheet-note-card .card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.sheet-note-card .game-key {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.sheet-note-card .pitch-label {
+  font-size: 0.6rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.sheet-note-card .card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.oct-badge {
+  font-size: 0.55rem;
+  padding: 0px 3px;
+  border-radius: 3px;
+  font-weight: 800;
+  background: rgba(0,0,0,0.05);
+}
+.sharp .oct-badge {
+  background: rgba(255,255,255,0.1);
+}
+
+.range-badge {
+  font-size: 0.5rem;
+  padding: 0px 3px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.range-badge.shift {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.range-badge.error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+#qwerty-container {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 0.5rem; /* Space for scrollbar */
+}
+
+/* 2. Physical QWERTY keyboard */
+.qwerty-keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+  min-width: 950px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.qwerty-row {
+  display: flex;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.qwerty-key {
+  height: 60px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(28, 25, 42, 0.8) 0%, rgba(16, 14, 25, 0.9) 100%);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  position: relative;
+  transition: background 0.05s ease, border-color 0.05s ease, transform 0.05s ease, box-shadow 0.05s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.qwerty-key:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.qwerty-key .key-char {
+  font-size: 0.85rem;
+  font-weight: 700;
+  align-self: flex-start;
+}
+
+.qwerty-key .music-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: -2px;
+}
+
+.qwerty-key .octave-indicator {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0px 3px;
+  border-radius: 3px;
+}
+
+.qwerty-key.inactive-key, .qwerty-key.functional {
+  opacity: 0.15;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.qwerty-key.playable-key.octave-1 { border-bottom: 2px solid var(--color-oct1); }
+.qwerty-key.playable-key.octave-1 .octave-indicator { background: rgba(56, 189, 248, 0.12); color: var(--color-oct1); }
+
+.qwerty-key.playable-key.octave-2 { border-bottom: 2px solid var(--color-oct2); }
+.qwerty-key.playable-key.octave-2 .octave-indicator { background: rgba(52, 211, 153, 0.12); color: var(--color-oct2); }
+
+.qwerty-key.playable-key.octave-3 { border-bottom: 2px solid var(--color-oct3); }
+.qwerty-key.playable-key.octave-3 .octave-indicator { background: rgba(251, 146, 60, 0.12); color: var(--color-oct3); }
+
+.qwerty-key.playable-key.octave-4 { border-bottom: 2px solid var(--color-oct4); }
+.qwerty-key.playable-key.octave-4 .octave-indicator { background: rgba(192, 132, 252, 0.12); color: var(--color-oct4); }
+
+.qwerty-key.playable-key.sharp {
+  background: linear-gradient(180deg, rgba(20, 18, 30, 0.95) 0%, rgba(12, 10, 19, 1) 100%);
+}
+
+/* Instant response for physical typed feedback (no delays, no transitions) */
+.qwerty-key.playable-key.pressed {
+  background: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  color: #000000 !important;
+  transform: translateY(1.5px);
+  box-shadow: var(--shadow-glow-accent);
+  transition: none !important;
+}
+.qwerty-key.playable-key.pressed .octave-indicator {
+  background: rgba(0,0,0,0.1) !important;
+  color: #000000 !important;
+  transition: none !important;
+}
+
+/* 4. Razer Chroma Panel */
+.sidebar-chroma-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border: 1px solid rgba(0, 255, 100, 0.08);
+}
+
+.chroma-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chroma-logo {
+  font-size: 1.3rem;
+  filter: drop-shadow(0 0 6px rgba(0, 255, 80, 0.4));
+}
+
+.chroma-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.chroma-subtitle {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
+
+.chroma-status {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.chroma-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chroma-dot.disconnected {
+  background: #475569;
+  box-shadow: none;
+}
+
+.chroma-dot.connected {
+  background: #22c55e;
+  box-shadow: 0 0 7px rgba(34, 197, 94, 0.7);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.chroma-dot.error {
+  background: #f43f5e;
+  box-shadow: 0 0 7px rgba(244, 63, 94, 0.6);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+#chroma-status-text {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.chroma-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.chroma-btn {
+  font-size: 0.75rem;
+  padding: 0.4rem 0.5rem;
+}
+
+/* Footer */
+footer.app-footer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0.4rem 0;
+  margin-top: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.02);
+}

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="두근두근타운 인게임 피아노 연습을 위한 스마트 악보 변환 및 재생 도구. MIDI 파일을 업로드하고 QWERTY 키보드와 인게임 키보드 매핑을 동시에 보며 마스터하세요.">
+  <title>🎹 두근두근타운 악보 도우미 — 인게임 피아노 매핑 연습기</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <!-- App Wrapper for Topbar & Main Grid -->
+  <div class="app-wrapper">
+    
+    <!-- TOP BAR -->
+    <header class="app-topbar glass-panel">
+      <div class="topbar-left">
+        <button id="menu-toggle-btn" class="btn"><span class="btn-icon">☰</span> 메뉴</button>
+      </div>
+      <div class="topbar-center">
+        <div class="song-title" id="song-title">파일을 업로드해주세요</div>
+      </div>
+      <div class="topbar-right playback-buttons">
+        <button class="btn primary" id="play-btn" title="재생" disabled>
+          <span class="btn-icon">▶</span>
+        </button>
+        <button class="btn" id="pause-btn" title="일시정지" disabled>
+          <span class="btn-icon">⏸</span>
+        </button>
+        <button class="btn danger" id="stop-btn" title="정지" disabled>
+          <span class="btn-icon">⏹</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="app-container app-layout">
+      
+      <!-- ==========================================
+           LEFT SIDEBAR: Branding, File Load, Controls
+           ========================================== -->
+      <aside class="sidebar-layout" id="sidebar-section">
+        
+        <!-- 1. Header Section -->
+        <header class="glass-panel sidebar-header-card">
+          <div class="title-section">
+            <span class="piano-emoji" aria-hidden="true">🎹</span>
+            <div>
+              <h1>두근두근타운</h1>
+              <div class="subtitle">실시간 악보 도우미</div>
+            </div>
+          </div>
+          <div class="sidebar-meta-badges">
+            <span class="badge" id="instrument-badge">음원: 신디사이저</span>
+            <span class="badge bpm" id="bpm-badge">BPM --</span>
+          </div>
+        </header>
+
+        <!-- 2. Config & File Upload Panel -->
+        <section class="glass-panel sidebar-upload-card">
+          <!-- File Uploader -->
+          <div class="file-upload-box" id="upload-box">
+            <input type="file" id="file-input" accept=".mid,.midi">
+            <div class="upload-placeholder">
+              <span class="upload-icon">📂</span>
+              <strong>MIDI 파일 선택</strong>
+              <span>클릭하거나 파일을 드래그하세요.</span>
+            </div>
+          </div>
+
+          <!-- Loaded Song Details -->
+          <div class="song-info-card" id="song-info-panel">
+            <div class="meta-badges">
+              <span class="badge" id="track-count-badge">트랙 0개</span>
+              <span class="badge" id="note-count-badge">노트 0개</span>
+            </div>
+          </div>
+
+          <!-- Track Configuration -->
+          <div class="config-controls">
+            <div class="form-group">
+              <label for="track-select">연주할 트랙 선택</label>
+              <select id="track-select" disabled>
+                <option value="">트랙 목록이 비어있습니다</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="instrument-select">재생 악기 소리</label>
+              <select id="instrument-select">
+                <option value="sampler" selected>Salamander 리얼 피아노</option>
+                <option value="synth">합성 신디사이저 (삼각파)</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Playback Controller Deck -->
+        <section class="glass-panel sidebar-controls-card">
+          <label>재생 제어판</label>
+
+          <div class="speed-slider-control">
+            <label for="speed-range">배속 조절</label>
+            <div class="speed-row">
+              <input type="range" id="speed-range" min="0.5" max="1.5" step="0.05" value="1.0">
+              <span class="speed-label" id="speed-val">1.00x</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar Track -->
+          <div class="progress-bar-container">
+            <div class="progress-track" id="progress-track">
+              <div class="progress-fill" id="progress-fill"></div>
+              <div class="progress-handle" id="progress-handle"></div>
+            </div>
+            <div class="time-counter">
+              <span id="current-time-val">0:00.0</span> / <span id="total-time-val">0:00.0</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Warnings Area for Octave Shifts -->
+        <div id="warning-container"></div>
+
+        <!-- 4. Razer Chroma RGB Sync Panel -->
+        <section class="glass-panel sidebar-chroma-card" id="chroma-panel">
+          <div class="chroma-header">
+            <span class="chroma-logo">🐍</span>
+            <div>
+              <div class="chroma-title">Razer Chroma 연동</div>
+              <div class="chroma-subtitle">키보드 RGB 악보 동기화</div>
+            </div>
+          </div>
+          <div class="chroma-status" id="chroma-status">
+            <span class="chroma-dot disconnected" id="chroma-dot"></span>
+            <span id="chroma-status-text">연결 안됨 — 버튼을 눌러 연결하세요</span>
+          </div>
+          <div class="chroma-buttons">
+            <button class="btn chroma-btn" id="chroma-connect-btn">🔌 연결</button>
+            <button class="btn chroma-btn danger" id="chroma-disconnect-btn" disabled>⏏ 해제</button>
+          </div>
+        </section>
+        
+      </aside>
+
+      <!-- ==========================================
+           RIGHT MAIN: Sheet Viewer, Keyboards, Footer
+           ========================================== -->
+      <main class="main-layout" id="main-section">
+        
+        <!-- 2. Physical QWERTY Keyboard Layout (MOVED UP) -->
+        <section class="glass-panel" id="qwerty-section">
+          <div class="keyboard-section-title qwerty-title">
+            <span>⌨️</span> 실제 QWERTY 키보드 가이드 (타건 연주 가능)
+          </div>
+          <div id="qwerty-container"></div>
+        </section>
+
+        <!-- 1. Sheet Music Tablature Viewer -->
+        <section class="glass-panel sheet-viewer-container" id="sheet-viewer-section">
+          <div class="keyboard-section-title">
+            <span>📜</span> 실시간 변환 게임 악보 (가로 스크롤)
+          </div>
+          <!-- Horizontal Scrollable Container -->
+          <div id="sheet-container">
+            <div class="sheet-empty-state">MIDI 파일을 먼저 업로드하면 여기에 게임 악보가 표시됩니다.</div>
+          </div>
+        </section>
+        
+        <!-- Footer Information -->
+        <footer class="app-footer" id="app-footer">
+          <div>두근두근타운 피아노 변환 도우미 &copy; 2026. 모든 미디 변환은 브라우저 측에서 무지연 수행됩니다.</div>
+        </footer>
+        
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Entry Script Module -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
