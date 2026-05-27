@@ -17,15 +17,6 @@ import {
 } from './player.js';
 import { renderQwertyKeyboard, updateQwertyHighlights } from './keyboard-qwerty.js';
 import { renderSheetView, updateSheetHighlight } from './sheet-view.js';
-import {
-  initChroma,
-  destroyChroma,
-  updateChromaLighting,
-  showIdleLayout,
-  clearLighting,
-  isChromaConnected
-} from './razer-chroma.js';
-
 // ──────────────────────────────────────────────
 // Application State
 // ──────────────────────────────────────────────
@@ -72,12 +63,6 @@ const transposeUpBtn     = document.getElementById('transpose-up-btn');
 const transposeValEl     = document.getElementById('transpose-val');
 const transposeResetBtn  = document.getElementById('transpose-reset-btn');
 
-// Razer Chroma UI
-const chromaConnectBtn   = document.getElementById('chroma-connect-btn');
-const chromaDisconnectBtn= document.getElementById('chroma-disconnect-btn');
-const chromaDot          = document.getElementById('chroma-dot');
-const chromaStatusText   = document.getElementById('chroma-status-text');
-
 // ──────────────────────────────────────────────
 // Utilities
 // ──────────────────────────────────────────────
@@ -99,17 +84,6 @@ function highlightKeyVisually(keyChar, isPressed) {
     if (isPressed) el.classList.add('pressed');
     else el.classList.remove('pressed');
   });
-}
-
-// ──────────────────────────────────────────────
-// Razer Chroma Status UI
-// ──────────────────────────────────────────────
-function updateChromaUI(connected, message) {
-  chromaDot.className = 'chroma-dot ' + (connected ? 'connected' : (message.includes('실패') || message.includes('오류') || message.includes('끊') ? 'error' : 'disconnected'));
-  chromaStatusText.textContent = message;
-
-  chromaConnectBtn.disabled    = connected;
-  chromaDisconnectBtn.disabled = !connected;
 }
 
 // ──────────────────────────────────────────────
@@ -170,21 +144,6 @@ function setupEventListeners() {
   transposeUpBtn.addEventListener('click',   () => applyTranspose(transposeAmount + 1));
   transposeResetBtn.addEventListener('click',() => applyTranspose(0));
 
-  // ── Razer Chroma Buttons ──────────────────
-  chromaConnectBtn.addEventListener('click', async () => {
-    chromaConnectBtn.disabled = true;
-    chromaStatusText.textContent = '연결 중...';
-    chromaDot.className = 'chroma-dot disconnected';
-    await initChroma(updateChromaUI);
-    // 연결 후 아이들 레이아웃 표시
-    if (isChromaConnected()) await showIdleLayout(KEY_MAP);
-  });
-
-  chromaDisconnectBtn.addEventListener('click', async () => {
-    await destroyChroma();
-    updateChromaUI(false, '연결 해제됨');
-  });
-
   // ── Physical Keyboard ─────────────────────
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
@@ -197,11 +156,6 @@ function setupEventListeners() {
       pressedPhysicalKeys.add(keyChar);
       highlightKeyVisually(keyChar, true);
       playSingleNote(midiNote);
-
-      // Razer: 해당 키 즉시 점등
-      if (isChromaConnected()) {
-        updateChromaLighting(new Set([midiNote]), KEY_MAP);
-      }
     }
   });
 
@@ -210,23 +164,8 @@ function setupEventListeners() {
     if (pressedPhysicalKeys.has(keyChar)) {
       pressedPhysicalKeys.delete(keyChar);
       highlightKeyVisually(keyChar, false);
-
-      // Razer: 다른 눌린 키들만 유지, 이 키는 제거
-      if (isChromaConnected()) {
-        const remainingMidi = new Set(
-          [...pressedPhysicalKeys]
-            .map(k => getMidiForKey(k))
-            .filter(m => m !== null)
-        );
-        updateChromaLighting(remainingMidi, KEY_MAP);
-        // 아무것도 안 눌렸으면 아이들 레이아웃 복원
-        if (remainingMidi.size === 0) showIdleLayout(KEY_MAP);
-      }
     }
   });
-
-  // 페이지 닫힐 때 Chroma 세션 정리
-  window.addEventListener('beforeunload', () => destroyChroma());
 }
 
 // ──────────────────────────────────────────────
@@ -363,9 +302,6 @@ function handleStop() {
   updateQwertyHighlights(new Set());
   updateSheetHighlight(0);
   updateWarningUI(false);
-
-  // Razer: 정지 시 아이들 레이아웃 복원
-  if (isChromaConnected()) showIdleLayout(KEY_MAP);
 }
 
 function handleProgressBarSeek(e) {
@@ -392,16 +328,9 @@ function playbackLoop() {
   const hasShift = state.activeNotes.some(n => n.outOfRange);
   updateWarningUI(hasShift);
 
-  // ── Razer Chroma 실시간 동기화 ────────────
-  if (isChromaConnected() && state.activeMidiNotes?.size > 0) {
-    updateChromaLighting(state.activeMidiNotes, KEY_MAP);
-  } else if (isChromaConnected()) {
-    showIdleLayout(KEY_MAP);
-  }
-
   if (state.time >= loadedSong.duration) {
     handleStop();
-  } else if (state.state === 'started') {
+  } else {
     animationFrameId = requestAnimationFrame(playbackLoop);
   }
 }

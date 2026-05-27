@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import { KEY_MAP } from './keymap.js';
 
 let sampler = null;
 let synth = null;
@@ -207,7 +208,10 @@ export function getPlaybackState() {
       if (time >= note.time && time <= (note.time + note.duration)) {
         if (note.resolved) {
           activeKeys.add(note.key);
-          activeMidiNotes.add(note.midi);
+          // note.midi can be out-of-KEY_MAP for octave-shifted notes.
+          // Use the KEY_MAP entry that matches note.key to guarantee a valid midi.
+          const keyEntry = Object.entries(KEY_MAP).find(([_, v]) => v.key === note.key);
+          if (keyEntry) activeMidiNotes.add(parseInt(keyEntry[0]));
           activeNotesList.push(note);
         }
       }
