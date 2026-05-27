@@ -16,27 +16,33 @@ const GRID_ROWS = 6;
 const GRID_COLS = 22;
 
 // 각 문자(대문자/특수문자) → [row, col] 좌표 매핑
+// Razer Chroma SDK 6×22 그리드 기준:
+//   Row 0 = Esc / F1~F12 행
+//   Row 1 = 숫자 행  (`  1  2 ... 0  -  =  BS)   → ` 은 col 1부터 시작
+//   Row 2 = QWERTY 행 (Tab col 1, Q col 2부터 시작)
+//   Row 3 = ASDF 행   (CapsLock col 1, A col 2부터 시작)
+//   Row 4 = ZXCV 행   (LShift col 1, Z col 2부터 시작)
 const KEY_GRID_POS = {
-  // ── 숫자 행 (Row 0) ──
-  '`': [0, 1],
-  '1': [0, 2], '2': [0, 3], '3': [0, 4], '4': [0, 5],
-  '5': [0, 6], '6': [0, 7], '7': [0, 8], '8': [0, 9],
-  '9': [0, 10], '0': [0, 11], '-': [0, 12], '=': [0, 13],
+  // ── 숫자 행 (Row 1) ── ` 은 col 1, 1은 col 2, ...
+  '`': [1, 1],
+  '1': [1, 2], '2': [1, 3], '3': [1, 4], '4': [1, 5],
+  '5': [1, 6], '6': [1, 7], '7': [1, 8], '8': [1, 9],
+  '9': [1, 10], '0': [1, 11], '-': [1, 12], '=': [1, 13],
 
-  // ── QWERTY 행 (Row 1) ──
-  'Q': [1, 1], 'W': [1, 2], 'E': [1, 3], 'R': [1, 4],
-  'T': [1, 5], 'Y': [1, 6], 'U': [1, 7], 'I': [1, 8],
-  'O': [1, 9], 'P': [1, 10], '[': [1, 11], ']': [1, 12],
+  // ── QWERTY 행 (Row 2) ── Tab이 col 1 차지 → Q는 col 2부터
+  'Q': [2, 2], 'W': [2, 3], 'E': [2, 4], 'R': [2, 5],
+  'T': [2, 6], 'Y': [2, 7], 'U': [2, 8], 'I': [2, 9],
+  'O': [2, 10], 'P': [2, 11], '[': [2, 12], ']': [2, 13],
 
-  // ── ASDF 행 (Row 2) ──
-  'A': [2, 1], 'S': [2, 2], 'D': [2, 3], 'F': [2, 4],
-  'G': [2, 5], 'H': [2, 6], 'J': [2, 7], 'K': [2, 8],
-  'L': [2, 9], ';': [2, 10], "'": [2, 11],
+  // ── ASDF 행 (Row 3) ── CapsLock이 col 1 차지 → A는 col 2부터
+  'A': [3, 2], 'S': [3, 3], 'D': [3, 4], 'F': [3, 5],
+  'G': [3, 6], 'H': [3, 7], 'J': [3, 8], 'K': [3, 9],
+  'L': [3, 10], ';': [3, 11], "'": [3, 12],
 
-  // ── ZXCV 행 (Row 3) ──
-  'Z': [3, 1], 'X': [3, 2], 'C': [3, 3], 'V': [3, 4],
-  'B': [3, 5], 'N': [3, 6], 'M': [3, 7],
-  ',': [3, 8], '.': [3, 9], '/': [3, 10],
+  // ── ZXCV 행 (Row 4) ── LShift이 col 1 차지 → Z는 col 2부터
+  'Z': [4, 2], 'X': [4, 3], 'C': [4, 4], 'V': [4, 5],
+  'B': [4, 6], 'N': [4, 7], 'M': [4, 8],
+  ',': [4, 9], '.': [4, 10], '/': [4, 11],
 };
 
 // ──────────────────────────────────────────────
@@ -67,6 +73,11 @@ let heartbeatTimer = null;
 let isConnected = false;
 let onStatusChange = null; // (connected, message) 콜백
 
+// Chroma 업데이트 중복 방지: 이전 전송 값을 캐싱
+let lastSentKey = null;   // 마지막으로 전송한 activeMidiNotes 직렬화 키
+let isShowingIdle = false; // 현재 아이들 레이아웃이 표시 중인지
+let lastGrid = null;       // 마지막으로 전송한 그리드 (하트비트 재전송용)
+
 // 앱 등록 정보 (Razer Chroma SDK에 앱 이름을 표시)
 const APP_INFO = {
   title: '두근두근타운 악보 도우미',
@@ -80,47 +91,55 @@ const APP_INFO = {
 // 공개 API
 // ──────────────────────────────────────────────
 
+// Chroma SDK 엔드포인트
+// HTTP 먼저 시도 → 브라우저 Private Network Access 차단 시 HTTPS 폴백
+const CHROMA_ENDPOINTS = [
+  'http://localhost:54235/razer/chromasdk',
+  'https://chromasdk.io:54236/razer/chromasdk',
+];
+
 /**
  * Razer Chroma SDK 세션을 초기화합니다.
+ * HTTP → HTTPS 순서로 자동 폴백합니다.
  * @param {function} statusCallback (isConnected: boolean, message: string) => void
  */
 export async function initChroma(statusCallback) {
   onStatusChange = statusCallback;
-  
-  try {
-    const res = await fetch('http://localhost:54235/razer/chromasdk', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(APP_INFO),
-    });
 
-    if (!res.ok) {
-      throw new Error(`Chroma SDK 초기화 실패: HTTP ${res.status}`);
+  let lastErr = null;
+  for (const endpoint of CHROMA_ENDPOINTS) {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(APP_INFO),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      if (!data.uri) throw new Error('세션 URI 없음');
+
+      sessionUri = data.uri;
+      isConnected = true;
+      lastSentKey = null;
+      isShowingIdle = false;
+
+      // 1.5초마다 하트비트 전송 (세션 유지)
+      heartbeatTimer = setInterval(sendHeartbeat, 1500);
+
+      if (onStatusChange) onStatusChange(true, '✅ Razer Chroma 연결됨 — 매핑된 키가 발광합니다.');
+      return;
+
+    } catch (err) {
+      lastErr = err;
+      console.warn(`[Chroma] ${endpoint} 연결 실패:`, err.message);
     }
+  }
 
-    const data = await res.json();
-    
-    if (!data.uri) {
-      throw new Error('Chroma SDK에서 세션 URI를 반환하지 않았습니다.');
-    }
-
-    sessionUri = data.uri;
-    isConnected = true;
-
-    // 1.5초마다 하트비트 전송 (세션 유지)
-    heartbeatTimer = setInterval(sendHeartbeat, 1500);
-
-    // 매핑된 키 전체를 어두운 색상으로 초기화 (매핑 영역 표시)
-    await showIdleLayout();
-
-    if (onStatusChange) onStatusChange(true, '✅ Razer Chroma 연결됨 — 매핑된 키가 발광합니다.');
-
-  } catch (err) {
-    isConnected = false;
-    console.warn('[Chroma] 연결 실패:', err.message);
-    if (onStatusChange) {
-      onStatusChange(false, `⚠️ Razer Chroma 연결 실패: Synapse가 실행 중인지 확인하세요. (${err.message})`);
-    }
+  isConnected = false;
+  if (onStatusChange) {
+    onStatusChange(false, `⚠️ 연결 실패: Synapse가 실행 중이고 Chroma Apps가 활성화되어 있는지 확인하세요. (${lastErr?.message})`);
   }
 }
 
@@ -141,16 +160,26 @@ export async function destroyChroma() {
 
   sessionUri = null;
   isConnected = false;
+  lastSentKey = null;
+  isShowingIdle = false;
+  lastGrid = null;
   if (onStatusChange) onStatusChange(false, '— Razer Chroma 연결 해제됨');
 }
 
 /**
  * 현재 재생 중 활성화된 MIDI 노트들을 받아 키보드 조명을 업데이트합니다.
+ * 이전 전송 값과 동일하면 HTTP 요청을 건너뜁니다 (60fps 폭탄 방지).
  * @param {Set<number>} activeMidiNotes  현재 재생 중인 MIDI 음표 번호 Set
  * @param {object} keyMap               KEY_MAP 객체 (keymap.js에서 import)
  */
 export async function updateChromaLighting(activeMidiNotes, keyMap) {
   if (!isConnected || !sessionUri) return;
+
+  // 변경이 없으면 전송 생략
+  const key = [...activeMidiNotes].sort((a, b) => a - b).join(',');
+  if (key === lastSentKey) return;
+  lastSentKey = key;
+  isShowingIdle = false;
 
   // 기본 레이아웃: 매핑된 키는 어두운 표시, 나머지는 꺼짐
   const grid = buildIdleGrid(keyMap);
@@ -172,10 +201,14 @@ export async function updateChromaLighting(activeMidiNotes, keyMap) {
 
 /**
  * 키보드를 정지 상태로 복원합니다 (매핑 키만 어둡게 표시).
+ * 이미 아이들 상태면 재전송하지 않습니다.
  * @param {object} keyMap
  */
 export async function showIdleLayout(keyMap) {
   if (!isConnected || !sessionUri) return;
+  if (isShowingIdle) return;
+  isShowingIdle = true;
+  lastSentKey = null;
   const grid = buildIdleGrid(keyMap);
   await applyGrid(grid);
 }
@@ -243,6 +276,8 @@ function dimOctaveColor(color) {
 async function applyGrid(grid) {
   if (!sessionUri) return;
 
+  lastGrid = grid;
+
   try {
     await fetch(`${sessionUri}/keyboard`, {
       method: 'PUT',
@@ -262,11 +297,23 @@ async function applyGrid(grid) {
   }
 }
 
-/** 하트비트 전송 (세션 유지) */
+/**
+ * 하트비트 전송 + 마지막 조명 상태 재전송
+ * Razer SDK는 주기적으로 재전송하지 않으면 Synapse 기본 프로필로 복귀하므로
+ * 하트비트마다 lastGrid를 다시 PUT해서 앱의 조명 제어권을 유지합니다.
+ */
 async function sendHeartbeat() {
   if (!sessionUri) return;
   try {
     await fetch(`${sessionUri}/heartbeat`, { method: 'PUT' });
+    // 조명 제어권 유지: 마지막 그리드 재전송
+    if (lastGrid) {
+      await fetch(`${sessionUri}/keyboard`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ effect: 'CHROMA_CUSTOM', param: lastGrid }),
+      });
+    }
   } catch (_) {
     isConnected = false;
     clearInterval(heartbeatTimer);
