@@ -19,6 +19,7 @@ export async function parseMidi(file) {
         const resolved = resolveKey(note.midi);
         return {
           midi: note.midi,
+          originalMidi: note.midi,    // Preserved for transposition
           time: note.time,            // Start time in seconds
           duration: note.duration,    // Duration in seconds
           velocity: note.velocity,    // 0 to 1

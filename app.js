@@ -1,5 +1,5 @@
 import { parseMidi } from './parser.js';
-import { KEY_MAP } from './keymap.js';
+import { KEY_MAP, resolveKey } from './keymap.js';
 import { 
   initializeAudio, 
   initSampler, 
@@ -33,6 +33,7 @@ let loadedSong = null;
 let activeTrack = null;
 let animationFrameId = null;
 let persistentWarning = '';
+let transposeAmount = 0;
 const pressedPhysicalKeys = new Set();
 
 // ──────────────────────────────────────────────
@@ -64,6 +65,12 @@ const totalTimeVal       = document.getElementById('total-time-val');
 // Topbar Controls
 const menuToggleBtn      = document.getElementById('menu-toggle-btn');
 const appLayout          = document.querySelector('.app-layout');
+
+// Transpose UI
+const transposeDownBtn   = document.getElementById('transpose-down-btn');
+const transposeUpBtn     = document.getElementById('transpose-up-btn');
+const transposeValEl     = document.getElementById('transpose-val');
+const transposeResetBtn  = document.getElementById('transpose-reset-btn');
 
 // Razer Chroma UI
 const chromaConnectBtn   = document.getElementById('chroma-connect-btn');
@@ -157,6 +164,11 @@ function setupEventListeners() {
 
   progressTrack.addEventListener('click', handleProgressBarSeek);
   instrumentSelect.addEventListener('change', handleInstrumentChange);
+
+  // ── Transpose Buttons ────────────────────
+  transposeDownBtn.addEventListener('click', () => applyTranspose(transposeAmount - 1));
+  transposeUpBtn.addEventListener('click',   () => applyTranspose(transposeAmount + 1));
+  transposeResetBtn.addEventListener('click',() => applyTranspose(0));
 
   // ── Razer Chroma Buttons ──────────────────
   chromaConnectBtn.addEventListener('click', async () => {
@@ -268,6 +280,22 @@ function loadTrack(trackId) {
   if (!activeTrack) return;
 
   noteCountBadge.textContent = `노트 ${activeTrack.noteCount}개`;
+
+  // Re-apply current transpose to the newly selected track
+  if (transposeAmount !== 0) {
+    activeTrack.notes.forEach(note => {
+      note.midi = note.originalMidi + transposeAmount;
+      const resolved = resolveKey(note.midi);
+      note.key        = resolved ? resolved.key        : '?';
+      note.label      = resolved ? resolved.label      : '?';
+      note.octave     = resolved ? resolved.octave     : 0;
+      note.sharp      = resolved ? resolved.sharp      : false;
+      note.outOfRange = resolved ? resolved.outOfRange : true;
+      note.shifted    = resolved ? resolved.shifted    : 0;
+      note.resolved   = !!resolved;
+    });
+  }
+
   scheduleTrack(activeTrack, loadedSong.bpm);
   renderSheetView('sheet-container', activeTrack.notes, (time) => {
     seek(time);
@@ -384,6 +412,42 @@ function updateTimelineUI(time) {
   const pct = Math.max(0, Math.min(100, (time / loadedSong.duration) * 100));
   progressFill.style.width  = `${pct}%`;
   progressHandle.style.left = `${pct}%`;
+}
+
+// ──────────────────────────────────────────────
+// Transpose
+// ──────────────────────────────────────────────
+function applyTranspose(semitones) {
+  transposeAmount = semitones;
+  transposeValEl.textContent = semitones > 0 ? `+${semitones}` : `${semitones}`;
+  transposeValEl.style.color = semitones === 0
+    ? 'var(--text-secondary)'
+    : semitones > 0 ? 'var(--color-oct3)' : 'var(--color-oct1)';
+  transposeResetBtn.disabled = semitones === 0;
+
+  if (!activeTrack) return;
+
+  // Re-resolve all note mappings with the new MIDI offset
+  activeTrack.notes.forEach(note => {
+    note.midi = note.originalMidi + semitones;
+    const resolved = resolveKey(note.midi);
+    note.key        = resolved ? resolved.key        : '?';
+    note.label      = resolved ? resolved.label      : '?';
+    note.octave     = resolved ? resolved.octave     : 0;
+    note.sharp      = resolved ? resolved.sharp      : false;
+    note.outOfRange = resolved ? resolved.outOfRange : true;
+    note.shifted    = resolved ? resolved.shifted    : 0;
+    note.resolved   = !!resolved;
+  });
+
+  // Reschedule audio and refresh visuals
+  scheduleTrack(activeTrack, loadedSong.bpm);
+  renderSheetView('sheet-container', activeTrack.notes, (time) => {
+    seek(time);
+    updateTimelineUI(time);
+  });
+  calculatePersistentWarning(activeTrack.notes);
+  updateQwertyHighlights(new Set());
 }
 
 // ──────────────────────────────────────────────
