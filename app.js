@@ -16,6 +16,7 @@ import {
   playSingleNote
 } from './player.js';
 import { renderQwertyKeyboard, updateQwertyHighlights } from './keyboard-qwerty.js';
+import { renderIngameKeyboard, updateIngameHighlights } from './keyboard-ingame.js';
 import { renderSheetView, updateSheetHighlight } from './sheet-view.js';
 // ──────────────────────────────────────────────
 // Application State
@@ -90,6 +91,7 @@ function highlightKeyVisually(keyChar, isPressed) {
 // Init
 // ──────────────────────────────────────────────
 function init() {
+  renderIngameKeyboard('ingame-keyboard-container');
   renderQwertyKeyboard('qwerty-container');
   setupEventListeners();
   // Trigger initial instrument load
@@ -300,6 +302,7 @@ function handleStop() {
   trackSelect.disabled = false;
   updateTimelineUI(0);
   updateQwertyHighlights(new Set());
+  updateIngameHighlights(new Set());
   updateSheetHighlight(0);
   updateWarningUI(false);
 }
@@ -323,6 +326,7 @@ function playbackLoop() {
   const state = getPlaybackState();
   updateTimelineUI(state.time);
   updateQwertyHighlights(state.activeKeys);
+  updateIngameHighlights(new Set(state.activeNotes.map(n => n.midi)));
   updateSheetHighlight(state.time);
 
   const hasShift = state.activeNotes.some(n => n.outOfRange);
@@ -377,6 +381,7 @@ function applyTranspose(semitones) {
   });
   calculatePersistentWarning(activeTrack.notes);
   updateQwertyHighlights(new Set());
+  updateIngameHighlights(new Set());
 }
 
 // ──────────────────────────────────────────────

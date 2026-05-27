@@ -85,11 +85,6 @@ export function renderIngameKeyboard(containerId) {
     const rowContainer = document.createElement('div');
     rowContainer.className = `piano-octave-row ${octaveInfo.className}`;
 
-    const titleEl = document.createElement('div');
-    titleEl.className = 'octave-row-title';
-    titleEl.textContent = octaveInfo.title;
-    rowContainer.appendChild(titleEl);
-
     // Keyboard container where white and black keys reside
     const keyboardEl = document.createElement('div');
     keyboardEl.className = 'piano-keybed';
@@ -108,9 +103,7 @@ export function renderIngameKeyboard(containerId) {
 
       whiteEl.innerHTML = `
         <div class="key-labels">
-          <span class="game-key">${wKey.key}</span>
           <span class="note-name">${wKey.label}</span>
-          <span class="octave-num">${currentOctave}</span>
         </div>
       `;
 
@@ -138,7 +131,6 @@ export function renderIngameKeyboard(containerId) {
 
       blackEl.innerHTML = `
         <div class="key-labels">
-          <span class="game-key">${bKey.key}</span>
           <span class="note-name">${bKey.label}</span>
         </div>
       `;

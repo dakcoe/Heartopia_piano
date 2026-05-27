@@ -8,29 +8,36 @@
 :root {
   /* Color Palette - Vibrant Dark Theme */
   --bg-main: #06050a;
-  --bg-card: #121019; /* Solid high-performance dark backing (eliminates blur redraw delays) */
+  --bg-card: #121019;
+  /* Solid high-performance dark backing (eliminates blur redraw delays) */
   --bg-card-hover: #1b1826;
   --border-glass: rgba(255, 255, 255, 0.05);
   --border-glass-active: rgba(255, 255, 255, 0.12);
-  
+
   --text-primary: #fffffe;
   --text-secondary: #94a3b8;
   --text-muted: #4b5563;
-  
+
   /* Octave Theme Colors */
-  --color-oct1: #38bdf8; /* Blue - Low */
-  --color-oct2: #34d399; /* Green - Medium */
-  --color-oct3: #fb923c; /* Orange - High */
-  --color-oct4: #c084fc; /* Violet - Max */
-  --color-accent: #eab308; /* Yellow/Gold for Active Pressed State */
-  
+  --color-oct1: #38bdf8;
+  /* Blue - Low */
+  --color-oct2: #34d399;
+  /* Green - Medium */
+  --color-oct3: #fb923c;
+  /* Orange - High */
+  --color-oct4: #c084fc;
+  /* Violet - Max */
+  --color-accent: #eab308;
+  /* Yellow/Gold for Active Pressed State */
+
   --shadow-glow-oct1: 0 0 10px rgba(56, 189, 248, 0.3);
   --shadow-glow-oct2: 0 0 10px rgba(52, 211, 153, 0.3);
   --shadow-glow-oct3: 0 0 10px rgba(251, 146, 60, 0.3);
   --shadow-glow-oct4: 0 0 10px rgba(192, 132, 252, 0.3);
   --shadow-glow-accent: 0 0 12px rgba(234, 179, 8, 0.55);
-  
-  --transition-smooth: all 0.06s ease-out; /* Blazing fast hover/click triggers */
+
+  --transition-smooth: all 0.06s ease-out;
+  /* Blazing fast hover/click triggers */
   --font-display: 'Outfit', 'Noto Sans KR', sans-serif;
 }
 
@@ -45,14 +52,15 @@
 
 body {
   background-color: var(--bg-main);
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.07) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(192, 132, 252, 0.07) 0px, transparent 50%),
     radial-gradient(at 50% 100%, rgba(52, 211, 153, 0.03) 0px, transparent 50%);
   color: var(--text-primary);
   font-family: var(--font-display);
   min-height: 100vh;
-  overflow: hidden; /* Prevent body scroll, scrollbars inside containers */
+  overflow: hidden;
+  /* Prevent body scroll, scrollbars inside containers */
   line-height: 1.4;
 }
 
@@ -61,15 +69,18 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 4px;
   transition: var(--transition-smooth);
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
@@ -95,7 +106,8 @@ body {
   flex-shrink: 0;
 }
 
-.topbar-left, .topbar-right {
+.topbar-left,
+.topbar-right {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -105,6 +117,7 @@ body {
   flex: 1;
   text-align: center;
   margin: 0 1rem;
+  min-width: 0;
 }
 
 .topbar-center .song-title {
@@ -126,6 +139,7 @@ body {
   gap: 1rem;
   flex: 1;
   min-height: 0;
+  min-width: 0;
 }
 
 /* Responsive grid for desktop split screens */
@@ -134,11 +148,11 @@ body {
     grid-template-columns: 320px 1fr;
     transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   .app-layout.sidebar-hidden {
     grid-template-columns: 0px 1fr;
   }
-  
+
   .sidebar-layout {
     overflow-y: auto;
     overflow-x: hidden;
@@ -155,7 +169,7 @@ body {
     opacity: 0;
     pointer-events: none;
   }
-  
+
   .main-layout {
     overflow-y: auto;
     display: flex;
@@ -163,6 +177,7 @@ body {
     gap: 0.75rem;
     height: 100%;
     padding-right: 0.25rem;
+    min-width: 0;
   }
 }
 
@@ -202,8 +217,15 @@ body {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 h1 {
@@ -269,7 +291,10 @@ h1 {
 
 .file-upload-box input[type="file"] {
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   opacity: 0;
   cursor: pointer;
 }
@@ -464,7 +489,7 @@ select:focus {
   border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
-.transpose-control > label {
+.transpose-control>label {
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -535,7 +560,9 @@ select:focus {
 
 .progress-fill {
   position: absolute;
-  top: 0; left: 0; height: 100%;
+  top: 0;
+  left: 0;
+  height: 100%;
   background: linear-gradient(90deg, var(--color-oct2) 0%, var(--color-oct1) 100%);
   border-radius: 3px;
   width: 0%;
@@ -612,6 +639,7 @@ select:focus {
 .sheet-viewer-container {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .sheet-scroll-wrapper {
@@ -693,19 +721,41 @@ select:focus {
   border: 1px solid #334155;
 }
 
-.sheet-note-card.octave-1 { border-left: 3px solid var(--color-oct1); }
-.sheet-note-card.octave-2 { border-left: 3px solid var(--color-oct2); }
-.sheet-note-card.octave-3 { border-left: 3px solid var(--color-oct3); }
-.sheet-note-card.octave-4 { border-left: 3px solid var(--color-oct4); }
+.sheet-note-card.octave-1 {
+  border-left: 3px solid var(--color-oct1);
+}
+
+.sheet-note-card.octave-2 {
+  border-left: 3px solid var(--color-oct2);
+}
+
+.sheet-note-card.octave-3 {
+  border-left: 3px solid var(--color-oct3);
+}
+
+.sheet-note-card.octave-4 {
+  border-left: 3px solid var(--color-oct4);
+}
 
 .sheet-note-card:hover {
   transform: scale(1.03);
 }
 
-.sheet-column.active .sheet-note-card.octave-1 { box-shadow: var(--shadow-glow-oct1); }
-.sheet-column.active .sheet-note-card.octave-2 { box-shadow: var(--shadow-glow-oct2); }
-.sheet-column.active .sheet-note-card.octave-3 { box-shadow: var(--shadow-glow-oct3); }
-.sheet-column.active .sheet-note-card.octave-4 { box-shadow: var(--shadow-glow-oct4); }
+.sheet-column.active .sheet-note-card.octave-1 {
+  box-shadow: var(--shadow-glow-oct1);
+}
+
+.sheet-column.active .sheet-note-card.octave-2 {
+  box-shadow: var(--shadow-glow-oct2);
+}
+
+.sheet-column.active .sheet-note-card.octave-3 {
+  box-shadow: var(--shadow-glow-oct3);
+}
+
+.sheet-column.active .sheet-note-card.octave-4 {
+  box-shadow: var(--shadow-glow-oct4);
+}
 
 .sheet-note-card .card-main {
   display: flex;
@@ -738,10 +788,11 @@ select:focus {
   padding: 0px 3px;
   border-radius: 3px;
   font-weight: 800;
-  background: rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
+
 .sharp .oct-badge {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .range-badge {
@@ -764,7 +815,8 @@ select:focus {
 #qwerty-container {
   width: 100%;
   overflow-x: auto;
-  padding-bottom: 0.5rem; /* Space for scrollbar */
+  padding-bottom: 0.5rem;
+  /* Space for scrollbar */
 }
 
 /* 2. Physical QWERTY keyboard */
@@ -801,7 +853,7 @@ select:focus {
   padding: 6px 8px;
   position: relative;
   transition: background 0.05s ease, border-color 0.05s ease, transform 0.05s ease, box-shadow 0.05s ease;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 1px 3px rgba(0,0,0,0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .qwerty-key:hover {
@@ -832,23 +884,48 @@ select:focus {
   border-radius: 3px;
 }
 
-.qwerty-key.inactive-key, .qwerty-key.functional {
+.qwerty-key.inactive-key,
+.qwerty-key.functional {
   opacity: 0.15;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-.qwerty-key.playable-key.octave-1 { border-bottom: 2px solid var(--color-oct1); }
-.qwerty-key.playable-key.octave-1 .octave-indicator { background: rgba(56, 189, 248, 0.12); color: var(--color-oct1); }
+.qwerty-key.playable-key.octave-1 {
+  border-bottom: 2px solid var(--color-oct1);
+}
 
-.qwerty-key.playable-key.octave-2 { border-bottom: 2px solid var(--color-oct2); }
-.qwerty-key.playable-key.octave-2 .octave-indicator { background: rgba(52, 211, 153, 0.12); color: var(--color-oct2); }
+.qwerty-key.playable-key.octave-1 .octave-indicator {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--color-oct1);
+}
 
-.qwerty-key.playable-key.octave-3 { border-bottom: 2px solid var(--color-oct3); }
-.qwerty-key.playable-key.octave-3 .octave-indicator { background: rgba(251, 146, 60, 0.12); color: var(--color-oct3); }
+.qwerty-key.playable-key.octave-2 {
+  border-bottom: 2px solid var(--color-oct2);
+}
 
-.qwerty-key.playable-key.octave-4 { border-bottom: 2px solid var(--color-oct4); }
-.qwerty-key.playable-key.octave-4 .octave-indicator { background: rgba(192, 132, 252, 0.12); color: var(--color-oct4); }
+.qwerty-key.playable-key.octave-2 .octave-indicator {
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--color-oct2);
+}
+
+.qwerty-key.playable-key.octave-3 {
+  border-bottom: 2px solid var(--color-oct3);
+}
+
+.qwerty-key.playable-key.octave-3 .octave-indicator {
+  background: rgba(251, 146, 60, 0.12);
+  color: var(--color-oct3);
+}
+
+.qwerty-key.playable-key.octave-4 {
+  border-bottom: 2px solid var(--color-oct4);
+}
+
+.qwerty-key.playable-key.octave-4 .octave-indicator {
+  background: rgba(192, 132, 252, 0.12);
+  color: var(--color-oct4);
+}
 
 .qwerty-key.playable-key.sharp {
   background: linear-gradient(180deg, rgba(20, 18, 30, 0.95) 0%, rgba(12, 10, 19, 1) 100%);
@@ -863,8 +940,9 @@ select:focus {
   box-shadow: var(--shadow-glow-accent);
   transition: none !important;
 }
+
 .qwerty-key.playable-key.pressed .octave-indicator {
-  background: rgba(0,0,0,0.1) !important;
+  background: rgba(0, 0, 0, 0.1) !important;
   color: #000000 !important;
   transition: none !important;
 }
@@ -877,4 +955,162 @@ footer.app-footer {
   padding: 0.4rem 0;
   margin-top: 0.4rem;
   border-top: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+/* ==========================================================================
+   IN-GAME KEYBOARD (🎮)
+   ========================================================================== */
+
+#ingame-keyboard-container {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 1.5rem;
+}
+
+.ingame-piano {
+  display: flex;
+  flex-direction: column-reverse;
+  /* Put High octave on top, low on bottom */
+  gap: 2.5rem;
+  align-items: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  min-width: max-content;
+}
+
+.piano-octave-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.piano-keybed {
+  display: flex;
+  position: relative;
+  gap: 24px;
+  /* increased space between white keys */
+}
+
+/* White Keys */
+.piano-key.white-key {
+  width: 56px;
+  height: 64px;
+  background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 0 #94a3b8,
+    0 6px 10px rgba(0, 0, 0, 0.3),
+    inset 0 1px 3px rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.05s, box-shadow 0.05s;
+  color: #1e293b;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.piano-key.white-key:active,
+.piano-key.white-key.pressed {
+  transform: translateY(4px);
+  box-shadow:
+    0 0px 0 #94a3b8,
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 3px rgba(255, 255, 255, 0.8);
+  background: linear-gradient(180deg, #e2e8f0 0%, #94a3b8 100%);
+}
+
+.piano-key.white-key.octave-1.pressed {
+  box-shadow: 0 0px 0 #94a3b8, 0 0 15px var(--color-oct1);
+}
+
+.piano-key.white-key.octave-2.pressed {
+  box-shadow: 0 0px 0 #94a3b8, 0 0 15px var(--color-oct2);
+}
+
+.piano-key.white-key.octave-3.pressed {
+  box-shadow: 0 0px 0 #94a3b8, 0 0 15px var(--color-oct3);
+}
+
+.piano-key.white-key.octave-4.pressed {
+  box-shadow: 0 0px 0 #94a3b8, 0 0 15px var(--color-oct4);
+}
+
+.piano-key.white-key .key-labels {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.piano-key.white-key .note-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+
+/* Black Keys */
+.piano-key.black-key {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
+  border-radius: 50%;
+  box-shadow:
+    0 4px 0 #000,
+    0 6px 10px rgba(0, 0, 0, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: absolute;
+  top: -20px;
+  /* (offset index * (white key width 56 + gap 24)) - (gap 24 / 2) - (black key width 40 / 2) */
+  left: calc(var(--key-offset) * 80px - 32px);
+  z-index: 10;
+  color: #fff;
+  transition: transform 0.05s, box-shadow 0.05s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.piano-key.black-key:active,
+.piano-key.black-key.pressed {
+  transform: translateY(4px);
+  box-shadow:
+    0 0px 0 #000,
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  background: linear-gradient(180deg, #1e293b 0%, #020617 100%);
+}
+
+.piano-key.black-key.octave-1.pressed {
+  box-shadow: 0 0px 0 #000, 0 0 15px var(--color-oct1);
+}
+
+.piano-key.black-key.octave-2.pressed {
+  box-shadow: 0 0px 0 #000, 0 0 15px var(--color-oct2);
+}
+
+.piano-key.black-key.octave-3.pressed {
+  box-shadow: 0 0px 0 #000, 0 0 15px var(--color-oct3);
+}
+
+.piano-key.black-key.octave-4.pressed {
+  box-shadow: 0 0px 0 #000, 0 0 15px var(--color-oct4);
+}
+
+.piano-key.black-key .key-labels {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.piano-key.black-key .note-name {
+  font-size: 0.75rem;
+  font-weight: 800;
 }
