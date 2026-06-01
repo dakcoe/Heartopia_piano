@@ -112,12 +112,17 @@ export function renderQwertyKeyboard(containerId) {
         `;
 
         // Add interactive click listener
-        keyEl.addEventListener('mousedown', () => {
+        const handleQwertyPress = (e) => {
+          if (e.type === 'touchstart') {
+            e.preventDefault();
+          }
           playSingleNote(midiNote);
           // Temporary click visual effect
           keyEl.classList.add('pressed');
           setTimeout(() => keyEl.classList.remove('pressed'), 150);
-        });
+        };
+        keyEl.addEventListener('mousedown', handleQwertyPress);
+        keyEl.addEventListener('touchstart', handleQwertyPress, { passive: false });
       } else {
         keyEl.classList.add('inactive-key');
         keyEl.innerHTML = `<span class="key-char">${keyInfo.label}</span>`;

@@ -107,11 +107,16 @@ export function renderIngameKeyboard(containerId) {
         </div>
       `;
 
-      whiteEl.addEventListener('mousedown', () => {
+      const handleWhitePress = (e) => {
+        if (e.type === 'touchstart') {
+          e.preventDefault();
+        }
         playSingleNote(wKey.midi);
         whiteEl.classList.add('pressed');
         setTimeout(() => whiteEl.classList.remove('pressed'), 150);
-      });
+      };
+      whiteEl.addEventListener('mousedown', handleWhitePress);
+      whiteEl.addEventListener('touchstart', handleWhitePress, { passive: false });
 
       keyboardEl.appendChild(whiteEl);
     });
@@ -135,12 +140,17 @@ export function renderIngameKeyboard(containerId) {
         </div>
       `;
 
-      blackEl.addEventListener('mousedown', (e) => {
+      const handleBlackPress = (e) => {
         e.stopPropagation(); // prevent triggering underlying white key
+        if (e.type === 'touchstart') {
+          e.preventDefault();
+        }
         playSingleNote(bKey.midi);
         blackEl.classList.add('pressed');
         setTimeout(() => blackEl.classList.remove('pressed'), 150);
-      });
+      };
+      blackEl.addEventListener('mousedown', handleBlackPress);
+      blackEl.addEventListener('touchstart', handleBlackPress, { passive: false });
 
       keyboardEl.appendChild(blackEl);
     });
